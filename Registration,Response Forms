@@ -1,0 +1,52 @@
+package RestAssuredCr;
+
+import io.qameta.allure.junitplatform.AllurePostDiscoveryFilter;
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.http.ContentType;
+import io.restassured.specification.RequestSpecification;
+import org.assertj.core.api.Assertions;
+import org.assertj.core.api.AssertionsForClassTypes;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+import org.assertj.core.annotations.*;
+
+import java.util.Comparator;
+import java.util.List;
+import static  io.restassured.RestAssured.given;
+import static io.restassured.RestAssured.request;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class REST_Service {
+    RequestSpecification REQ_SPEC1 = new RequestSpecBuilder()
+            .setBaseUri("https://reqres.in/api").setBasePath("/users").setContentType(ContentType.JSON).build();
+    @Test
+    public void test1(){
+
+        List<REST_ServicePojo> rest =given().spec(REQ_SPEC1).when().get()
+                .then().statusCode(200).extract().jsonPath().getList("data",REST_ServicePojo.class);
+
+         List<REST_ServicePojo> rest1= rest.stream().sorted(new Comparator<REST_ServicePojo>() {
+            @Override
+            public int compare(REST_ServicePojo o1, REST_ServicePojo o2) {
+                return o1.getFirst_name().compareTo(o2.getFirst_name());//имена в алфавитном порядке
+            }
+
+        }).collect(Collectors.toList());
+        Assert.assertTrue(rest1.get(0).getFirst_name().equals("Charles"));
+
+
+    }
+    @Test
+    public void PostTest(){
+        RegistrationForm reg_form = new RegistrationForm();
+        reg_form.setEmail("dim_dimyych04@mail.ru");
+        reg_form.setFirst_name("Dima");
+        reg_form.setId(135);
+        ResponseForm res_form = new ResponseForm();
+        ResponseForm result = given().spec(REQ_SPEC1).body(reg_form).when().put().then().extract().as(ResponseForm.class);
+        Assertions.assertThat(result).extracting(ResponseForm::getFirst_name).isNotNull();
+    }
+
+}
